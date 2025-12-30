@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酸奶销售记录系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4CAF50;
+        }
+        
+        h1 {
+            color: #2c5c2c;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: #2c5c2c;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+            font-size: 1.5rem;
+        }
+        
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .product-table th {
+            background-color: #4CAF50;
+            color: white;
+            text-align: left;
+            padding: 12px 15px;
+            font-weight: 600;
+        }
+        
+        .product-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .product-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .product-table tr:hover {
+            background-color: #f1f8f1;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-group input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        
+        .sales-cell {
+            font-weight: 600;
+            color: #2c5c2c;
+        }
+        
+        .total-row {
+            font-weight: bold;
+            background-color: #e8f5e9 !important;
+            font-size: 1.1rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .calculate-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .calculate-btn:hover {
+            background-color: #3d8b40;
+        }
+        
+        .reset-btn {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        
+        .reset-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .save-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .save-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .report-container {
+            background-color: #f0f9f0;
+            border-left: 4px solid #4CAF50;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 0 5px 5px 0;
+            white-space: pre-line;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .highlight {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        
+        .date-selector {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .date-selector label {
+            font-weight: 600;
+        }
+        
+        .date-selector input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .instructions {
+            background-color: #e8f4fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .instructions h3 {
+            color: #0b7dda;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>酸奶销售记录系统</h1>
+        <p class="subtitle">自动计算销售量与销售额，生成销售报告与图表</p>
+    </header>
+    
+    <div class="instructions">
+        <h3>使用说明</h3>
+        <ul>
+            <li>1. 在下方表格中填写每种酸奶的"昨日剩余"、"今日进货"和"今日剩余"数量</li>
+            <li>2. 点击"计算销售额"按钮，系统将自动计算销售量和销售额</li>
+            <li>3. 查看生成的销售报告和图表</li>
+            <li>4. 可以使用"保存数据"按钮保存当前记录，或"重置数据"按钮清空所有输入</li>
+            <li>5. 系统会自动计算：销售量 = 昨日剩余 + 今日进货 - 今日剩余</li>
+        </ul>
+    </div>
+    
+    <div class="success-message" id="successMessage">
+        数据计算完成！请查看下方的销售报告和图表。
+    </div>
+    
+    <div class="date-selector">
+        <label for="salesDate">销售日期：</label>
+        <input type="date" id="salesDate">
+        <button id="loadDataBtn" class="save-btn">加载该日期数据</button>
+    </div>
+    
+    <div class="container">
+        <div class="left-column">
+            <div class="card">
+                <h2>酸奶销售记录表</h2>
+                <table class="product-table" id="salesTable">
+                    <thead>
+                        <tr>
+                            <th>品名</th>
+                            <th>单价(元)</th>
+                            <th>昨日剩余</th>
+                            <th>今日进货</th>
+                            <th>今日剩余</th>
+                            <th>销售量</th>
+                            <th>销售额(元)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 表格数据将通过JavaScript动态生成 -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="6">今日总销售额：</td>
+                            <td id="totalSales">0.00</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="6">今日总销售量：</td>
+                            <td id="totalQuantity">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <div class="controls">
+                    <button id="calculateBtn" class="calculate-btn">计算销售额</button>
+                    <button id="resetBtn" class="reset-btn">重置数据</button>
+                    <button id="saveBtn" class="save-btn">保存数据</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>销售报告</h2>
+                <div class="report-container" id="reportOutput">
+                    <!-- 报告将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-column">
+            <div class="card">
+                <h2>销售额分布图</h2>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>销售量排名</h2>
+                <div class="chart-container">
+                    <canvas id="quantityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>酸奶销售记录系统 © 2023 | 专为酸奶销售员设计，简化库存管理与销售计算</p>
+    </footer>
+
+    <script>
+        // 酸奶产品数据 - 来自用户提供的文档
+        const products = [
+            { name: "140g乌日莫", price: 7.9 },
+            { name: "1kg蒙熟桶", price: 15.9 },
+            { name: "200g原味额吉", price: 7.9 },
+            { name: "210g活菌专利", price: 4.9 },
+            { name: "300g原味", price: 11.9 },
+            { name: "400g0糖额吉盒", price: 13.8 },
+            { name: "400g额吉盒", price: 13.8 },
+            { name: "620g乌日莫", price: 19.9 },
+            { name: "八旗0糖", price: 24.9 },
+            { name: "八旗凝酪", price: 24.9 },
+            { name: "草原专利桶", price: 10.9 },
+            { name: "烤奶皮子", price: 7.9 },
+            { name: "230g蒙古熟酸奶", price: 4.9 },
+            { name: "蒙氏冰酪", price: 4.9 },
+            { name: "葡萄额吉", price: 7.9 },
+            { name: "小天边额吉0蔗糖", price: 7.9 },
+            { name: "樱花额吉", price: 7.9 },
+            { name: "野生蓝莓", price: 11.9 },
+            { name: "野生沙棘", price: 11.9 }
+        ];
+
+        // 按用户要求的报告顺序排列
+        const reportOrder = [
+            "八旗0糖",
+            "八旗凝酪",
+            "草原专利桶",
+            "1kg蒙熟桶",
+            "400g额吉盒",
+            "400g0糖额吉盒",
+            "野生蓝莓",
+            "野生沙棘",
+            "300g原味",
+            "小天边额吉0蔗糖",
+            "葡萄额吉",
+            "200g原味额吉",
+            "樱花额吉",
+            "140g乌日莫",
+            "620g乌日莫",
+            "230g蒙古熟酸奶",
+            "210g活菌专利",
+            "蒙氏冰酪",
+            "烤奶皮子"
+        ];
+
+        // 初始化销售数据对象
+        let salesData = {};
+        products.forEach(product => {
+            salesData[product.name] = {
+                price: product.price,
+                yesterday: 0,
+                todayIn: 0,
+                todayRemain: 0,
+                sold: 0,
+                sales: 0
+            };
+        });
+
+        // 设置日期输入为今天
+        document.getElementById('salesDate').valueAsDate = new Date();
+
+        // 初始化表格
+        function initializeTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${product.price.toFixed(1)}</td>
+                    <td><input type="number" min="0" class="yesterday-input" data-product="${product.name}" value="${salesData[product.name].yesterday}"></td>
+                    <td><input type="number" min="0" class="todayIn-input" data-product="${product.name}" value="${salesData[product.name].todayIn}"></td>
+                    <td><input type="number" min="0" class="todayRemain-input" data-product="${product.name}" value="${salesData[product.name].todayRemain}"></td>
+                    <td class="sold-cell" data-product="${product.name}">0</td>
+                    <td class="sales-cell" data-product="${product.name}">0.00</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // 添加输入事件监听器
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('change', updateSalesData);
+            });
+        }
+
+        // 更新销售数据
+        function updateSalesData() {
+            const productName = this.getAttribute('data-product');
+            const field = this.className.replace('-input', '');
+            
+            salesData[productName][field] = parseInt(this.value) || 0;
+            
+            // 自动计算销售量和销售额
+            calculateProductSales(productName);
+        }
+
+        // 计算单个产品的销售数据
+        function calculateProductSales(productName) {
+            const data = salesData[productName];
+            data.sold = data.yesterday + data.todayIn - data.todayRemain;
+            
+            if (data.sold < 0) data.sold = 0;
+            
+            data.sales = data.sold * data.price;
+            
+            // 更新表格显示
+            document.querySelector(`.sold-cell[data-product="${productName}"]`).textContent = data.sold;
+            document.querySelector(`.sales-cell[data-product="${productName}"]`).textContent = data.sales.toFixed(2);
+            
+            // 更新总计
+            updateTotals();
+        }
+
+        // 更新总计
+        function updateTotals() {
+            let totalSales = 0;
+            let totalQuantity = 0;
+            
+            products.forEach(product => {
+                totalSales += salesData[product.name].sales;
+                totalQuantity += salesData[product.name].sold;
+            });
+            
+            document.getElementById('totalSales').textContent = totalSales.toFixed(2);
+            document.getElementById('totalQuantity').textContent = totalQuantity;
+        }
+
+        // 生成销售报告
+        function generateReport() {
+            let report = "今日销量:\n";
+            let totalSales = 0;
+            let totalQuantity = 0;
+            
+            // 按用户要求的顺序生成报告
+            reportOrder.forEach(productName => {
+                const data = salesData[productName];
+                const quantity = data.sold;
+                const sales = data.sales;
+                
+                if (quantity > 0) {
+                    report += `${productName} ${data.price.toFixed(1)}*${quantity}=${sales.toFixed(1)}\n`;
+                } else {
+                    report += `${productName} ${data.price.toFixed(1)}*${quantity}=0\n`;
+                }
+                
+                totalSales += sales;
+                totalQuantity += quantity;
+            });
+            
+            report += `\n总计: ${totalQuantity}件商品，总销售额: ${totalSales.toFixed(2)}元`;
+            
+            return report;
+        }
+
+        // 显示报告
+        function displayReport() {
+            const reportOutput = document.getElementById('reportOutput');
+            reportOutput.textContent = generateReport();
+        }
+
+        // 初始化图表
+        let salesChart, quantityChart;
+        
+        function initializeCharts() {
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            const quantityCtx = document.getElementById('quantityChart').getContext('2d');
+            
+            // 销售额图表
+            salesChart = new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '销售额 (元)',
+                        data: [],
+                        backgroundColor: 'rgba(76, 175, 80, 0.7)',
+                        borderColor: 'rgba(76, 175, 80, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '元';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+            
+            // 销售量图表
+            quantityChart = new Chart(quantityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '销售量',
+                        data: [],
+                        backgroundColor: [
+                            '#4CAF50', '#8BC34A', '#CDDC39', '#FFC107', '#FF9800',
+                            '#FF5722', '#795548', '#9C27B0', '#673AB7', '#3F51B5',
+                            '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50',
+                            '#8BC34A', '#CDDC39', '#FFC107', '#FF9800'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            updateCharts();
+        }
+
+        // 更新图表数据
+        function updateCharts() {
+            // 筛选出有销售的产品
+            const soldProducts = products.filter(product => salesData[product.name].sold > 0);
+            
+            // 按销售额排序
+            soldProducts.sort((a, b) => salesData[b.name].sales - salesData[a.name].sales);
+            
+            // 更新销售额图表
+            salesChart.data.labels = soldProducts.map(p => p.name);
+            salesChart.data.datasets[0].data = soldProducts.map(p => salesData[p.name].sales);
+            salesChart.update();
+            
+            // 按销售量排序
+            soldProducts.sort((a, b) => salesData[b.name].sold - salesData[a.name].sold);
+            
+            // 只显示前10个产品（否则图表太拥挤）
+            const topProducts = soldProducts.slice(0, 10);
+            
+            // 更新销售量图表
+            quantityChart.data.labels = topProducts.map(p => p.name);
+            quantityChart.data.datasets[0].data = topProducts.map(p => salesData[p.name].sold);
+            quantityChart.update();
+        }
+
+        // 计算所有产品销售额
+        function calculateAllSales() {
+            products.forEach(product => {
+                calculateProductSales(product.name);
+            });
+            
+            displayReport();
+            updateCharts();
+            
+            // 显示成功消息
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // 重置所有数据
+        function resetAllData() {
+            if (confirm('确定要重置所有数据吗？这将清除所有输入。')) {
+                products.forEach(product => {
+                    salesData[product.name] = {
+                        price: product.price,
+                        yesterday: 0,
+                        todayIn: 0,
+                        todayRemain: 0,
+                        sold: 0,
+                        sales: 0
+                    };
+                });
+                
+                initializeTable();
+                updateTotals();
+                displayReport();
+                updateCharts();
+            }
+        }
+
+        // 保存数据到本地存储
+        function saveData() {
+            const date = document.getElementById('salesDate').value;
+            const dataToSave = {
+                date: date,
+                salesData: salesData
+            };
+            
+            // 获取所有保存的数据
+            let allSavedData = JSON.parse(localStorage.getItem('yogurtSalesData')) || {};
+            
+            // 添加新数据
+            allSavedData[date] = dataToSave;
+            
+            // 保存到本地存储
+            localStorage.setItem('yogurtSalesData', JSON.stringify(allSavedData));
+            
+            alert(`数据已保存到 ${date}！`);
+        }
+
+        // 从本地存储加载数据
+        function loadData() {
+            const date = document.getElementById('salesDate').value;
+            const allSavedData = JSON.parse(localStorage.getItem('yogurtSalesData')) || {};
+            
+            if (allSavedData[date]) {
+                salesData = allSavedData[date].salesData;
+                initializeTable();
+                updateTotals();
+                displayReport();
+                updateCharts();
+                alert(`已加载 ${date} 的数据！`);
+            } else {
+                alert(`未找到 ${date} 的保存数据。`);
+            }
+        }
+
+        // 事件监听器
+        document.getElementById('calculateBtn').addEventListener('click', calculateAllSales);
+        document.getElementById('resetBtn').addEventListener('click', resetAllData);
+        document.getElementById('saveBtn').addEventListener('click', saveData);
+        document.getElementById('loadDataBtn').addEventListener('click', loadData);
+
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeTable();
+            displayReport();
+            initializeCharts();
+            
+            // 尝试加载今天的数据
+            loadData();
+        });
+    </script>
+</body>
+</html>
